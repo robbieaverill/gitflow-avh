@@ -1,5 +1,5 @@
-# Use a different version of getopt for gitflow on OSX
-export FLAGS_GETOPT_CMD="$(brew --prefix gnu-getopt)/bin/getopt"
+# OSX ONLY: Use a different version of getopt for gitflow on OSX
+#export FLAGS_GETOPT_CMD="$(brew --prefix gnu-getopt)/bin/getopt"
 
 # Customized configuration
 
