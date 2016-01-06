@@ -543,7 +543,8 @@ v,verbose!           Verbose (more) output
 	gitflow_require_version_arg
 	gitflow_config_set_base_branch $base $BRANCH
 
-	require_no_existing_release_branches
+	# Robbie: I don't want this.
+	#require_no_existing_release_branches
 
 	# Sanity checks
 	require_clean_working_tree
@@ -579,7 +580,7 @@ v,verbose!           Verbose (more) output
 
 cmd_finish() {
 	OPTIONS_SPEC="\
-git flow release finish [-h] [-F] [-s] [-u] [-m | -f] [-p] [-k] [-n] [-b] [-S] <version>
+git flow release finish [-h] [-F] [-s] [-u] [-m | -f] [-p] [-k] [-n] [-b] [-S] [-pr] <version>
 
 
 Finish a release branch
@@ -599,6 +600,7 @@ D,[no]force_delete  Force delete release branch after finish
 n,[no]tag           Don't tag this release
 b,[no]nobackmerge   Don't back-merge master, or tag if applicable, in develop
 S,[no]squash        Squash release during merge
+pr,pull-request-check  Check for an open GitHub pull request before finishing (requires 'hub')
 "
 	# Define flags
 	DEFINE_boolean 'fetch' false "fetch from $ORIGIN before performing finish" F
@@ -615,22 +617,24 @@ S,[no]squash        Squash release during merge
 	DEFINE_boolean 'nobackmerge' false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
 	DEFINE_boolean 'squash' false "squash release during merge" S
 	DEFINE_boolean 'squash-info' false "add branch info during squash"
+	DEFINE_boolean 'pull-reqest-check' false "check for an open GitHub pull request before finishing" pr
 
 	# Override defaults with values from config
-	gitflow_override_flag_boolean   "release.finish.fetch"          "fetch"
-	gitflow_override_flag_boolean   "release.finish.sign"           "sign"
-	gitflow_override_flag_boolean   "release.finish.push"           "push"
-	gitflow_override_flag_boolean   "release.finish.keep"           "keep"
-	gitflow_override_flag_boolean   "release.finish.keepremote"     "keepremote"
-	gitflow_override_flag_boolean   "release.finish.keeplocal"      "keeplocal"
-	gitflow_override_flag_boolean   "release.finish.force-delete"   "force_delete"
-	gitflow_override_flag_boolean   "release.finish.notag"          "notag"
-	gitflow_override_flag_boolean   "release.finish.nobackmerge"    "nobackmerge"
-	gitflow_override_flag_boolean   "release.finish.squash"         "squash"
-	gitflow_override_flag_boolean   "release.finish.squash-info"    "squash_info"
-	gitflow_override_flag_string    "release.finish.signingkey"     "signingkey"
-	gitflow_override_flag_string    "release.finish.message"        "message"
-	gitflow_override_flag_string    "release.finish.messagefile"    "messagefile"
+	gitflow_override_flag_boolean   "release.finish.fetch"              "fetch"
+	gitflow_override_flag_boolean   "release.finish.sign"               "sign"
+	gitflow_override_flag_boolean   "release.finish.push"               "push"
+	gitflow_override_flag_boolean   "release.finish.keep"               "keep"
+	gitflow_override_flag_boolean   "release.finish.keepremote"         "keepremote"
+	gitflow_override_flag_boolean   "release.finish.keeplocal"          "keeplocal"
+	gitflow_override_flag_boolean   "release.finish.force-delete"       "force_delete"
+	gitflow_override_flag_boolean   "release.finish.notag"              "notag"
+	gitflow_override_flag_boolean   "release.finish.nobackmerge"        "nobackmerge"
+	gitflow_override_flag_boolean   "release.finish.squash"             "squash"
+	gitflow_override_flag_boolean   "release.finish.squash-info"        "squash_info"
+	gitflow_override_flag_string    "release.finish.signingkey"         "signingkey"
+	gitflow_override_flag_string    "release.finish.message"            "message"
+	gitflow_override_flag_string    "release.finish.messagefile"        "messagefile"
+	gitflow_override_flag_boolean   "release.finish.pull-request-check" "pull_request_check"
 
 	# Parse arguments
 	parse_args "$@"
@@ -667,11 +671,16 @@ S,[no]squash        Squash release during merge
 	require_branch "$BRANCH"
 	require_clean_working_tree
 
+	# Check for an open GitHub pull request
+	if flag pull_request_check; then
+		github_check_for_pull_request "$VERSION" "$BRANCH" "$master"
+	fi
+
 	# We always fetch the Branch from Origin
 	# This is done to avoid possible commits on the remote that are not
 	# merged into the local branch
 	if git_remote_branch_exists "$ORIGIN/$BRANCH"; then
-			git_fetch_branch "$ORIGIN" "$BRANCH"
+		git_fetch_branch "$ORIGIN" "$BRANCH"
 	fi
 
 	if [ "$BASE_BRANCH" = "$DEVELOP_BRANCH" ]; then

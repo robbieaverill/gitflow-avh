@@ -234,7 +234,7 @@ F,[no]fetch      Fetch from origin before performing local operation
 
 cmd_finish() {
 	OPTIONS_SPEC="\
-git flow bugfix finish [-h] [-F] [-r] [-p] [-k] [-D] [-S] [--no-ff] <name|nameprefix>
+git flow bugfix finish [-h] [-F] [-r] [-p] [-k] [-D] [-S] [-pr] [--no-ff] <name|nameprefix>
 
 Finish bugfix <name>
 --
@@ -248,6 +248,7 @@ keepremote!        	   Keep the remote branch
 keeplocal!             Keep the local branch
 D,[no]force_delete     Force delete bugfix branch after finish
 S,[no]squash           Squash bugfix during merge
+pr,pull-request-check  Check for an open GitHub pull request before finishing (requires 'hub')
 no-ff!                 Never fast-forward during the merge
 "
 	local finish_base
@@ -262,19 +263,21 @@ no-ff!                 Never fast-forward during the merge
 	DEFINE_boolean 'force_delete' false "force delete bugfix branch after finish" D
 	DEFINE_boolean 'squash' false "squash bugfix during merge" S
 	DEFINE_boolean 'squash-info' false "add branch info during squash"
+	DEFINE_boolean 'pull-reqest-check' false "check for an open GitHub pull request before finishing" pr
 	DEFINE_boolean 'no-ff!' false "Don't fast-forward ever during merge "
 
 	# Override defaults with values from config
-	gitflow_override_flag_boolean   "bugfix.finish.fetch"             "fetch"
-	gitflow_override_flag_boolean   "bugfix.finish.rebase"            "rebase"
-	gitflow_override_flag_boolean   "bugfix.finish.preserve-merges"   "preserve_merges"
-	gitflow_override_flag_boolean   "bugfix.finish.keep"              "keep"
-	gitflow_override_flag_boolean   "bugfix.finish.keepremote"        "keepremote"
-	gitflow_override_flag_boolean   "bugfix.finish.keeplocal"         "keeplocal"
-	gitflow_override_flag_boolean   "bugfix.finish.force-delete"      "force_delete"
-	gitflow_override_flag_boolean   "bugfix.finish.squash"            "squash"
-	gitflow_override_flag_boolean   "bugfix.finish.squash-info"       "squash_info"
-	gitflow_override_flag_boolean   "bugfix.finish.no-ff"             "no_ff"
+	gitflow_override_flag_boolean   "bugfix.finish.fetch"              "fetch"
+	gitflow_override_flag_boolean   "bugfix.finish.rebase"             "rebase"
+	gitflow_override_flag_boolean   "bugfix.finish.preserve-merges"    "preserve_merges"
+	gitflow_override_flag_boolean   "bugfix.finish.keep"               "keep"
+	gitflow_override_flag_boolean   "bugfix.finish.keepremote"         "keepremote"
+	gitflow_override_flag_boolean   "bugfix.finish.keeplocal"          "keeplocal"
+	gitflow_override_flag_boolean   "bugfix.finish.force-delete"       "force_delete"
+	gitflow_override_flag_boolean   "bugfix.finish.squash"             "squash"
+	gitflow_override_flag_boolean   "bugfix.finish.squash-info"        "squash_info"
+	gitflow_override_flag_boolean   "bugfix.finish.pull-request-check" "pull_request_check"
+	gitflow_override_flag_boolean   "bugfix.finish.no-ff"              "no_ff"
 
 	# Parse arguments
 	parse_args "$@"
@@ -295,6 +298,11 @@ no-ff!                 Never fast-forward during the merge
 	BASE_BRANCH=$(gitflow_config_get_base_branch $BRANCH)
 	BASE_BRANCH=${BASE_BRANCH:-$DEVELOP_BRANCH}
 	git_local_branch_exists "$BASE_BRANCH" || die "The base '$BASE_BRANCH' doesn't exists locally or is not a branch. Can't finish the bugfix branch '$BRANCH'."
+
+	# Check for an open GitHub pull request
+	if flag pull_request_check; then
+		github_check_for_pull_request "$NAME" "$BRANCH" "$BASE_BRANCH"
+	fi
 
 	# Detect if we're restoring from a merge conflict
 	if [ -f "$DOT_GIT_DIR/.gitflow/MERGE_BASE" ]; then

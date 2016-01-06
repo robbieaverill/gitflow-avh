@@ -652,6 +652,68 @@ require_branches_equal() {
 }
 
 #
+# If using pull request checking, ensure that "hub" is available
+# 
+hub_dependency_check() {
+	DEPENDENCY_CHECK=$(which hub)
+
+	if [ "$DEPENDENCY_CHECK" = "" ]; then
+		warn "GitHub depdendency checker failed!"
+		warn ""
+		warn "* 'hub' not found in the path. Please install it before you can use the pull-request check."
+		warn "* See:     https://hub.github.com/"
+		exit 1
+	fi
+}
+
+#
+# Display a big warning message for when a GitHub pull request didn't exist, but does now
+# Args: $1 = $PULL_REQUEST_RESULT (URL)
+# 
+github_pull_request_missing_warning() {
+	echo "\
++---------------------------------------------------------------------+
++                   WARNING - MISSING PULL REQUEST!                   +
++---------------------------------------------------------------------+
+
+  It looks like you forgot to create a pull request for this branch.
+
+  One has been created for you, please ensure that it is reviewed:
+	  $1
+
+  Once it has been reviewed, re-run this command again. It will only
+  be checked once.
+"
+}
+
+#
+# Check for an open pull request in GitHub. If one isn't found then it will be created
+# and the process killed with a warning message to ensure the pull request is reviewed.
+# If one is found then proceed.
+# Args: $1 = $NAME, $2 = $BRANCH, $3 = $BASE_BRANCH
+# 
+github_check_for_pull_request() {
+	hub_dependency_check
+
+	PULL_REQUEST_RESULT=$(hub pull-request -f -b "$3" -h "$2" -m "$1: Code review" 2>&1)
+
+	if [[ "$PULL_REQUEST_RESULT" =~ "No commits between" ]]; then
+		# Nothing to pull request
+		warn "ERROR: looks like you haven't pushed to origin yet."
+		warn "Please run 'git flow [type] publish' then try again."
+		exit 1
+	fi
+
+	if [[ "$PULL_REQUEST_RESULT" =~ "already exists" ]]; then
+	    # Pull request already exists. Proceed.
+	    echo "Pull request found. Proceeding..."
+	else
+		github_pull_request_missing_warning "$PULL_REQUEST_RESULT"
+		exit 1
+	fi
+}
+
+#
 # Show commands if flag is set.
 #
 git_do() {

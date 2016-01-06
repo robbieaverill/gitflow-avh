@@ -356,7 +356,7 @@ showcommands!     Show git commands while executing them
 
 cmd_finish() {
 	OPTIONS_SPEC="\
-git flow hotfix finish [-h] [-F] [-s] [-u] [-m | -f ] [-p] [-k] [-n] [-b] [-S] <version>
+git flow hotfix finish [-h] [-F] [-s] [-u] [-m | -f ] [-p] [-k] [-n] [-b] [-S] [-pr] <version>
 
 Finish hotfix branch <version>
 --
@@ -375,6 +375,7 @@ D,[no]force_delete    Force delete hotfix branch after finish
 n,[no]notag           Don't tag this hotfix
 b,[no]nobackmerge     Don't back-merge master, or tag if applicable, in develop
 S,[no]squash          Squash hotfix during merge
+pr,pull-request-check Check for an open GitHub pull request before finishing (requires 'hub')
 "
 	local opts commit keepmsg remotebranchdeleted localbranchdeleted
 
@@ -393,6 +394,7 @@ S,[no]squash          Squash hotfix during merge
 	DEFINE_boolean 'nobackmerge' false "don't back-merge $MASTER_BRANCH, or tag if applicable, in $DEVELOP_BRANCH " b
 	DEFINE_boolean 'squash' false "squash release during merge" S
 	DEFINE_boolean 'squash-info' false "add branch info during squash"
+	DEFINE_boolean 'pull-reqest-check' false "check for an open GitHub pull request before finishing" pr
 
 	# Override defaults with values from config
 	gitflow_override_flag_boolean   "hotfix.finish.fetch"          "fetch"
@@ -409,6 +411,7 @@ S,[no]squash          Squash hotfix during merge
 	gitflow_override_flag_string    "hotfix.finish.signingkey"     "signingkey"
 	gitflow_override_flag_string    "hotfix.finish.message"        "message"
 	gitflow_override_flag_string    "hotfix.finish.messagefile"    "messagefile"
+	gitflow_override_flag_boolean   "feature.finish.pull-request-check" "pull_request_check"
 
 	# Parse arguments
 	parse_args "$@"
@@ -463,6 +466,11 @@ S,[no]squash          Squash hotfix during merge
 		if git_remote_branch_exists "$ORIGIN/$DEVELOP_BRANCH"; then
 			require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
 		fi
+	fi
+
+	# Check for an open GitHub pull request
+	if flag pull_request_check; then
+		github_check_for_pull_request "$VERSION" "$BRANCH" "$MASTER_BRANCH"
 	fi
 
 	# If the branch is already merged there is no need to check the hotfix branch
