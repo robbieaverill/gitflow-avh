@@ -1,0 +1,73 @@
+# Use a different version of getopt for gitflow on OSX
+export FLAGS_GETOPT_CMD="$(brew --prefix gnu-getopt)/bin/getopt"
+
+# Customized configuration
+
+### FEATURE
+
+# Always fetch origin before starting
+git config --global gitflow.feature.start.fetch true
+
+# Always fetch before finishing
+git config --global gitflow.feature.finish.fetch true
+
+# Always prompt to rebase when finishing a feature
+# git config --global gitflow.feature.finish.rebase true
+# git config --global gitflow.feature.rebase.interactive true
+
+# Always keep remote branches after finishing (required for automatically closing GitHub issues on merge)
+git config --global gitflow.feature.finish.keepremote true
+
+# Check for an existing open pull request before proceeding
+git config --global gitflow.feature.finish.pull-request-check true
+
+### BUGFIX
+
+# Always fetch origin before starting
+git config --global gitflow.bugfix.start.fetch true
+
+# Always fetch before finishing
+git config --global gitflow.bugfix.finish.fetch true
+
+# Always keep remote branches after finishing (required for automatically closing GitHub issues on merge)
+git config --global gitflow.bugfix.finish.keepremote true
+
+# Check for an existing open pull request before proceeding
+git config --global gitflow.bugfix.finish.pull-request-check true
+
+### RELEASE
+
+# Always fetch origin before starting
+git config --global gitflow.release.start.fetch true
+
+# Always fetch before finishing
+git config --global gitflow.release.finish.fetch true
+
+# Always keep remote branches after finishing (required for automatically closing GitHub issues on merge)
+git config --global gitflow.release.finish.keepremote true
+
+# Check for an existing open pull request before proceeding
+git config --global gitflow.release.finish.pull-request-check true
+
+# Push branches on releases finishing successfully
+git config --global gitflow.release.finish.push true
+
+### HOTFIX
+
+# Always fetch origin before starting
+git config --global gitflow.hotfix.start.fetch true
+
+# Always fetch before finishing
+git config --global gitflow.hotfix.finish.fetch true
+
+# Always keep remote branches after finishing (required for automatically closing GitHub issues on merge)
+git config --global gitflow.hotfix.finish.keepremote true
+
+# Check for an existing open pull request before proceeding
+git config --global gitflow.hotfix.finish.pull-request-check true
+
+# Push branches on hotfixes finishing successfully
+git config --global gitflow.hotfix.finish.push true
+
+# Allow multiple hotfixes to exist
+git config --global gitflow.multi-hotfix true
