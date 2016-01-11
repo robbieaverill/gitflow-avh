@@ -7,7 +7,7 @@
 # Licensed under the same restrictions as git-flow:
 # http://github.com/petervanderdoes/gitflow/blob/develop/LICENSE
 
-# Updated for the fork at petervanderdoes
+# Updated for the fork at robbieaverill
 
 usage() {
 	echo "Usage: [environment] gitflow-installer.sh [install|uninstall] [stable|develop]"
@@ -28,7 +28,7 @@ if [ -z "$REPO_NAME" ] ; then
 fi
 
 if [ -z "$REPO_HOME" ] ; then
-	REPO_HOME="https://github.com/petervanderdoes/gitflow-avh.git"
+	REPO_HOME="https://github.com/robbieaverill/gitflow-avh.git"
 fi
 
 EXEC_PREFIX="$PREFIX"
