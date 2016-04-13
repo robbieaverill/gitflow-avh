@@ -673,7 +673,7 @@ pr,pull-request-check  Check for an open GitHub pull request before finishing (r
 
 	# Check for an open GitHub pull request
 	if flag pull_request_check; then
-		github_check_for_pull_request "$VERSION" "$BRANCH" "$master"
+		github_check_for_pull_request "$VERSION" "$BRANCH" "$MASTER_BRANCH"
 	fi
 
 	# We always fetch the Branch from Origin
